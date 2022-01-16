@@ -1,6 +1,6 @@
 Hi Trupti
 This is file store
 File store stores files
-updates deletes files Hi store
-You can get the list of all files from your filestore, 
+updates deletes files
+You can get the list of all files from your filestore
 store store store Trupti hi all

@@ -11,6 +11,7 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"sync"
 )
 
 const (
@@ -178,7 +179,7 @@ func countWord(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func wordCount(rdr io.Reader) map[string]int {
+func wordCount(rdr io.Reader, channel chan (string)) map[string]int {
 	//counts := map[string]int{}
 
 	scanner := bufio.NewScanner(rdr)
@@ -186,8 +187,10 @@ func wordCount(rdr io.Reader) map[string]int {
 	for scanner.Scan() {
 		word := scanner.Text()
 		word = strings.ToLower(word)
-		finalCount[word]++
+		channel <- word
+		//	finalCount[word]++
 	}
+
 	return finalCount
 }
 
@@ -200,28 +203,44 @@ func FindWordCount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// A waitgroup to wait for all go-routines to finish.
-	//wg := sync.WaitGroup{}
+	wg := sync.WaitGroup{}
+
+	messages := make(chan string)
+	done := make(chan (bool), 1)
+
+	// Read all incoming words from the channel and add them to the dictionary.
+	go func() {
+		for word := range messages {
+			finalCount[word]++
+		}
+
+		// Signal the main thread that all the words have entered the dictionary.
+		done <- true
+	}()
 
 	//var finalCount map[string]int
 	for _, file := range files {
 
-		//wg.Add(1)
+		wg.Add(1)
 
-		//go func() {
+		fmt.Println("\n ************ ", file.Name())
 		file, fileOpenErr := os.Open(DirectoryName + "\\" + file.Name())
 		//fmt.Println("File Name: ", file.Name())
 		if fileOpenErr != nil {
 			fmt.Println("Not able to open the file : ", file.Name())
 		}
-		wordCount(bufio.NewReader(file))
 
-		//fmt.Println("\n Total number of words in file ", file.Name(), counts)
+		go func(file io.Reader) {
 
-		//wg.Done()
-		//}()
+			wordCount(bufio.NewReader(file), messages)
+
+			//fmt.Println("\n Total number of words in file ", finalCount)
+
+			wg.Done()
+		}(file)
 	}
 
-	//wg.Wait()
+	wg.Wait()
 	fmt.Println("\n Total number of words in file ", finalCount, len(finalCount))
 
 	type key struct {

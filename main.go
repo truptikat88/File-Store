@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"sync"
@@ -49,7 +50,9 @@ func addFiles(w http.ResponseWriter, r *http.Request) {
 		//strFileName := file.Name
 		data := []byte(file.Content)
 
-		err = os.WriteFile(DirectoryName+"/"+file.Name+".txt", data, 0644)
+		//err = os.WriteFile(filepath.Join() DirectoryName+"/"+file.Name+".txt", data, 0644)
+		err = os.WriteFile(filepath.Join(DirectoryName, file.Name+".txt"), data, 0644)
+
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -77,7 +80,9 @@ func addFile(w http.ResponseWriter, r *http.Request) {
 	//strFileName := file.Name
 	data := []byte(file.Content)
 
-	err = os.WriteFile(DirectoryName+"/"+file.Name+".txt", data, 0644)
+	//err = os.WriteFile(DirectoryName+"/"+file.Name+".txt", data, 0644)
+	err = os.WriteFile(filepath.Join(DirectoryName, file.Name+".txt"), data, 0644)
+
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -111,7 +116,7 @@ func removeFile(w http.ResponseWriter, r *http.Request) {
 
 	//fmt.Println(`Name of the file to remove := `, fileName)
 
-	e := os.Remove(DirectoryName + "/" + fileName + ".txt")
+	e := os.Remove(filepath.Join(DirectoryName, fileName+".txt"))
 	if e != nil {
 		log.Fatal(e)
 	}
@@ -133,7 +138,7 @@ func updateFile(w http.ResponseWriter, r *http.Request) {
 	dataToUpdate := []byte(file.Content)
 
 	// Read Write Mode
-	fileToUpdate, err := os.OpenFile(DirectoryName+"/"+file.Name+".txt", os.O_RDWR, 0644)
+	fileToUpdate, err := os.OpenFile(filepath.Join(DirectoryName, file.Name+".txt"), os.O_RDWR, 0644)
 
 	if err != nil {
 		log.Fatalf("failed opening file: %s", err)
@@ -179,7 +184,7 @@ func getFile(w http.ResponseWriter, r *http.Request) {
 	}
 	//fmt.Println(fileName)
 
-	fileBytes, err := ioutil.ReadFile(DirectoryName + "\\" + fileName + ".txt")
+	fileBytes, err := ioutil.ReadFile(filepath.Join(DirectoryName, fileName+".txt"))
 	if err != nil {
 		panic(err)
 	}
@@ -193,7 +198,7 @@ func getFile(w http.ResponseWriter, r *http.Request) {
 func getFiles(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Inside getFiles function...")
 
-	files, err := ioutil.ReadDir(DirectoryName + "\\")
+	files, err := ioutil.ReadDir(filepath.Join(DirectoryName))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -214,7 +219,7 @@ func countWord(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("filters not present")
 	}
 
-	fh, err := os.OpenFile(DirectoryName+"/"+fileName+".txt", os.O_RDWR, 0644)
+	fh, err := os.OpenFile(filepath.Join(DirectoryName, fileName+".txt"), os.O_RDWR, 0644)
 	if err != nil {
 		fmt.Printf("Could not open file '%v': %v", "File1.txt", err)
 		os.Exit(1)
@@ -278,7 +283,7 @@ func FindWordCount(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("\n inside findword... ")
 
-	files, err := ioutil.ReadDir(DirectoryName + "\\")
+	files, err := ioutil.ReadDir(filepath.Join(DirectoryName))
 
 	if err != nil {
 		log.Fatal(err)
@@ -306,7 +311,7 @@ func FindWordCount(w http.ResponseWriter, r *http.Request) {
 		wg.Add(1)
 
 		fmt.Println("\n ************ ", file.Name())
-		file, fileOpenErr := os.Open(DirectoryName + "\\" + file.Name())
+		file, fileOpenErr := os.Open(filepath.Join(DirectoryName, file.Name()))
 		//fmt.Println("File Name: ", file.Name())
 		if fileOpenErr != nil {
 			fmt.Println("Not able to open the file : ", file.Name())
@@ -366,6 +371,7 @@ func HandleRequests() {
 	http.HandleFunc("/fileGet", getFile)
 	http.HandleFunc("/filesGetAll", getFiles)
 
+	log.Printf("starting service on 8081...")
 	log.Fatal(http.ListenAndServe(":8081", nil))
 
 }

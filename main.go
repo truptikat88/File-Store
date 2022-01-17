@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -25,8 +26,41 @@ type Files struct {
 	Content string `json:"fileContent"`
 }
 
+type Items struct {
+	Elements []Files `json:"items"`
+}
+
 func homePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "This is home page of FileStore....")
+}
+
+func addFiles(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Inside addFile function...")
+
+	var items Items
+
+	err := json.NewDecoder(r.Body).Decode(&items)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	for _, file := range items.Elements {
+		//strFileName := file.Name
+		data := []byte(file.Content)
+
+		err = os.WriteFile(DirectoryName+"/"+file.Name+".txt", data, 0644)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		strFileName := file.Name + " file got created successfully"
+		fmt.Fprintf(w, strFileName)
+	}
+
+	//fmt.Fprintf(w, "File is created successfully...")
+	w.WriteHeader(http.StatusOK)
+
 }
 
 func addFile(w http.ResponseWriter, r *http.Request) {
@@ -52,6 +86,7 @@ func addFile(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, strFileName)
 
 	//fmt.Fprintf(w, "File is created successfully...")
+	w.WriteHeader(http.StatusOK)
 
 }
 
@@ -69,30 +104,50 @@ func removeFile(w http.ResponseWriter, r *http.Request) {
 
 	// strFileName := keys[0]
 
-	strFileName := "File3"
+	fileName := r.URL.Query().Get("fileName")
+	if len(fileName) == 0 {
+		fmt.Println("filters not present")
+	}
 
-	fmt.Println(`Name of the file to remove := `, strFileName)
+	//fmt.Println(`Name of the file to remove := `, fileName)
 
-	e := os.Remove(DirectoryName + "/" + strFileName + ".txt")
+	e := os.Remove(DirectoryName + "/" + fileName + ".txt")
 	if e != nil {
 		log.Fatal(e)
 	}
+	w.WriteHeader(http.StatusOK)
 }
 
 func updateFile(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(w, "inside update....")
 
+	var file Files
+
+	err := json.NewDecoder(r.Body).Decode(&file)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	//strFileName := file.Name
+	dataToUpdate := []byte(file.Content)
+
 	// Read Write Mode
-	file, err := os.OpenFile(DirectoryName+"/"+"File1.txt", os.O_RDWR, 0644)
+	fileToUpdate, err := os.OpenFile(DirectoryName+"/"+file.Name+".txt", os.O_RDWR, 0644)
 
 	if err != nil {
 		log.Fatalf("failed opening file: %s", err)
 	}
-	defer file.Close()
+	defer fileToUpdate.Close()
 
-	data := []byte("updated the content")
+	data := []byte(dataToUpdate)
 
-	_, err = file.WriteAt(data, 0) // Write at 0 beginning
+	// _, err = fileToUpdate.WriteAt(data, 0) // Write at 0 beginning
+	// if err != nil {
+	// 	log.Fatalf("failed writing to file: %s", err)
+	// }
+
+	_, err = fileToUpdate.WriteString(file.Content) // Write at 0 beginning
 	if err != nil {
 		log.Fatalf("failed writing to file: %s", err)
 	}
@@ -115,7 +170,16 @@ func getFile(w http.ResponseWriter, r *http.Request) {
 	// 	fmt.Println(line)
 	// }
 
-	fileBytes, err := ioutil.ReadFile(DirectoryName + "\\File.txt")
+	// path := r.URL.Path
+	// fmt.Println(path)
+
+	fileName := r.URL.Query().Get("fileName")
+	if len(fileName) == 0 {
+		fmt.Println("filters not present")
+	}
+	//fmt.Println(fileName)
+
+	fileBytes, err := ioutil.ReadFile(DirectoryName + "\\" + fileName + ".txt")
 	if err != nil {
 		panic(err)
 	}
@@ -138,10 +202,19 @@ func getFiles(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, file.Name(), file.ModTime(), file.Size())
 		fmt.Fprintf(w, "\n")
 	}
+
+	w.WriteHeader(http.StatusOK)
+
 }
 
 func countWord(w http.ResponseWriter, r *http.Request) {
-	fh, err := os.OpenFile(DirectoryName+"/"+"File1.txt", os.O_RDWR, 0644)
+
+	fileName := r.URL.Query().Get("fileName")
+	if len(fileName) == 0 {
+		fmt.Println("filters not present")
+	}
+
+	fh, err := os.OpenFile(DirectoryName+"/"+fileName+".txt", os.O_RDWR, 0644)
 	if err != nil {
 		fmt.Printf("Could not open file '%v': %v", "File1.txt", err)
 		os.Exit(1)
@@ -174,9 +247,16 @@ func countWord(w http.ResponseWriter, r *http.Request) {
 		return counter[words[i]] > counter[words[j]]
 	})
 
+	b := new(bytes.Buffer)
 	for _, word := range words {
-		fmt.Println("\n", word, counter[word])
+		fmt.Fprintf(b, "%s=\"%s\"\n", word, counter[word])
 	}
+
+	result := []byte(b.String())
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(result)
+
 }
 
 func wordCount(rdr io.Reader, channel chan (string)) map[string]int {
@@ -195,6 +275,8 @@ func wordCount(rdr io.Reader, channel chan (string)) map[string]int {
 }
 
 func FindWordCount(w http.ResponseWriter, r *http.Request) {
+
+	fmt.Println("\n inside findword... ")
 
 	files, err := ioutil.ReadDir(DirectoryName + "\\")
 
@@ -260,28 +342,32 @@ func FindWordCount(w http.ResponseWriter, r *http.Request) {
 		return keys[i].count > keys[j].count
 	})
 
-	for i := 0; i <= 10; i++ {
+	b := new(bytes.Buffer)
+	for i := 0; i <= 9; i++ {
 		fmt.Println("\n Total number of words in file ", keys[i])
+		fmt.Fprintf(b, "%s \"\n", keys[i])
 	}
 
-	// fmt.Println("\n Total number of words in file ", keys)
+	result := []byte(b.String())
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(result)
 
 }
 
 func HandleRequests() {
 	http.HandleFunc("/", homePage)
-	http.HandleFunc("/filesAdd", addFile)
-	http.HandleFunc("/filesRemove", removeFile)
-	http.HandleFunc("/filesUpdate", updateFile)
-	http.HandleFunc("/filesGet", getFile)
-	http.HandleFunc("/filesGetAll", getFiles)
-
 	http.HandleFunc("/countWord", countWord)
 	http.HandleFunc("/countWordFromAllFiles", FindWordCount)
+	http.HandleFunc("/fileAdd", addFile)
+	http.HandleFunc("/filesAdd", addFiles)
+	http.HandleFunc("/filesRemove", removeFile)
+	http.HandleFunc("/filesUpdate", updateFile)
+	http.HandleFunc("/fileGet", getFile)
+	http.HandleFunc("/filesGetAll", getFiles)
 
-	http.HandleFunc("/maxUsedWords", getFiles)
+	log.Fatal(http.ListenAndServe(":8081", nil))
 
-	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
 func main() {

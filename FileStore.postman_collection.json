@@ -1,0 +1,199 @@
+{
+	"info": {
+		"_postman_id": "e9ad6f9c-a8bb-45b9-beba-ba9c6ce598f7",
+		"name": "FileStore",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get All Files from File store",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8081\\filesGetAll",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"filesGetAll"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create New File in FileStore",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"fileName\": \"File3\",\r\n    \"fileContent\": \"This is my new file created from postman\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8081\\fileAdd",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"fileAdd"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get File and its content",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8081/fileGet?fileName=File2",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"fileGet"
+					],
+					"query": [
+						{
+							"key": "fileName",
+							"value": "File2"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete file from FileStore",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "",
+						"value": "File6",
+						"type": "default",
+						"disabled": true
+					}
+				],
+				"url": {
+					"raw": "localhost:8081/filesRemove?fileName=File6",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"filesRemove"
+					],
+					"query": [
+						{
+							"key": "fileName",
+							"value": "File6"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "update file content",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"fileName\": \"File3\",\r\n    \"fileContent\": \"This is my new file created from postman and updated as well\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8081\\filesUpdate",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"filesUpdate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "count words from all files",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080\\countWordFromAllFiles",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"countWordFromAllFiles"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "create multiple files",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"items\" :[\r\n        {\r\n            \"fileName\": \"File5\",\r\n            \"fileContent\": \"This is my new file created from postman\"\r\n        },\r\n        {\r\n            \"fileName\": \"File6\",\r\n            \"fileContent\": \"This is my new file created from postman\"\r\n        }\r\n    ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8081\\filesAdd",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"filesAdd"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "count words from single file",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8081\\countWord",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"countWord"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

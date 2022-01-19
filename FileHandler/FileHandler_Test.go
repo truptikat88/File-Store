@@ -8,7 +8,16 @@ import (
 	"testing"
 )
 
-func Test_CreateFile(t *testing.T) {
+// func Test_addSum(t *testing.T) {
+// 	result := addSum()
+
+// 	if result != 4 {
+// 		t.Error("result should be 4")
+// 	}
+
+// }
+
+func Test_AddFile(t *testing.T) {
 	file := Files{
 		Name:    "File111",
 		Content: "File created from Unit Test case",
@@ -20,6 +29,38 @@ func Test_CreateFile(t *testing.T) {
 
 	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(AddFile)
+
+	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
+	// directly and pass in our Request and ResponseRecorder.
+	handler.ServeHTTP(rr, request)
+
+	// Check the status code is what we expect.
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusOK)
+	}
+}
+
+func Test_AddFiles(t *testing.T) {
+	filesData := Items{
+		Elements: []Files{
+			{
+				Name:    "File99",
+				Content: "File99 created from Unit Test case",
+			},
+			{
+				Name:    "File98",
+				Content: "File98 created from Unit Test case",
+			},
+		},
+	}
+
+	body, _ := json.Marshal(filesData)
+
+	_, request := initializeHTTPRequest("POST", body, "")
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(AddFiles)
 
 	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
 	// directly and pass in our Request and ResponseRecorder.
@@ -34,17 +75,12 @@ func Test_CreateFile(t *testing.T) {
 }
 
 func Test_GetFile(t *testing.T) {
-	file := Files{
-		Name:    "File111",
-		Content: "File created from Unit Test case",
-	}
+	FileName := "File1"
 
-	body, _ := json.Marshal(file)
-
-	_, request := initializeHTTPRequest("POST", body, "")
+	_, request := initializeHTTPRequest("GET", nil, FileName)
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(AddFile)
+	handler := http.HandlerFunc(GetFile)
 
 	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
 	// directly and pass in our Request and ResponseRecorder.
@@ -56,6 +92,105 @@ func Test_GetFile(t *testing.T) {
 			status, http.StatusOK)
 	}
 
+}
+
+func Test_GetFiles(t *testing.T) {
+
+	_, request := initializeHTTPRequest("GET", nil, "")
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(GetFiles)
+
+	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
+	// directly and pass in our Request and ResponseRecorder.
+	handler.ServeHTTP(rr, request)
+
+	// Check the status code is what we expect.
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusOK)
+	}
+
+}
+
+func Test_RemoveFile(t *testing.T) {
+	FileName := "File1"
+
+	_, request := initializeHTTPRequest("DELETE", nil, FileName)
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(RemoveFile)
+
+	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
+	// directly and pass in our Request and ResponseRecorder.
+	handler.ServeHTTP(rr, request)
+
+	// Check the status code is what we expect.
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusOK)
+	}
+
+}
+
+func Test_UpdateFile(t *testing.T) {
+	file := Files{
+		Name:    "File111",
+		Content: "File created from Unit Test case",
+	}
+
+	body, _ := json.Marshal(file)
+
+	_, request := initializeHTTPRequest("PATCH", body, "")
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(UpdateFile)
+
+	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
+	// directly and pass in our Request and ResponseRecorder.
+	handler.ServeHTTP(rr, request)
+
+	// Check the status code is what we expect.
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusOK)
+	}
+}
+
+func Test_CountWord(t *testing.T) {
+
+	_, request := initializeHTTPRequest("GET", nil, "")
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(CountWord)
+
+	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
+	// directly and pass in our Request and ResponseRecorder.
+	handler.ServeHTTP(rr, request)
+
+	// Check the status code is what we expect.
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusOK)
+	}
+}
+
+func Test_FindWordCount(t *testing.T) {
+
+	_, request := initializeHTTPRequest("GET", nil, "")
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(FindWordCount)
+
+	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
+	// directly and pass in our Request and ResponseRecorder.
+	handler.ServeHTTP(rr, request)
+
+	// Check the status code is what we expect.
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusOK)
+	}
 }
 
 func initializeHTTPRequest(httpMethod string, body []byte, queryParam string) (*httptest.ResponseRecorder, *http.Request) {

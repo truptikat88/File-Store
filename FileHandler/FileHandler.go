@@ -31,6 +31,14 @@ type Items struct {
 	Elements []Files `json:"items"`
 }
 
+func addSum() int {
+
+	a := 2 + 2
+
+	return a
+
+}
+
 func GetFile(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Inside getFile function...")
 
@@ -55,7 +63,10 @@ func GetFile(w http.ResponseWriter, r *http.Request) {
 
 	fileBytes, err := ioutil.ReadFile(filepath.Join(DirectoryName, fileName+".txt"))
 	if err != nil {
-		panic(err)
+		data := []byte("File Not Found")
+		w.Write(data)
+		w.WriteHeader(http.StatusBadRequest)
+		//panic(err)
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -132,26 +143,23 @@ func AddFile(w http.ResponseWriter, r *http.Request) {
 func RemoveFile(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Inside removeFile function...")
 
-	// vars := mux.Vars(r)
-	// fileToRemove, ok := vars["file"]
-
-	// keys, ok := r.URL.Query()["file"]
-
-	// if !ok || len(keys[0]) < 1 {
-	// 	fmt.Println("File Name is missing in parameters...")
-	// }
-
-	// strFileName := keys[0]
-
 	fileName := r.URL.Query().Get("fileName")
 	if len(fileName) == 0 {
 		fmt.Println("filters not present")
 	}
 
-	//fmt.Println(`Name of the file to remove := `, fileName)
+	// _, err := ioutil.ReadFile(filepath.Join(DirectoryName, fileName+".txt"))
+	// if err != nil {
+	// 	data := []byte("File Not Found")
+	// 	w.Write(data)
+	// 	w.WriteHeader(http.StatusBadRequest)
+	// }
 
 	e := os.Remove(filepath.Join(DirectoryName, fileName+".txt"))
 	if e != nil {
+		data := []byte("File can not be removed")
+		w.Write(data)
+		w.WriteHeader(http.StatusBadRequest)
 		log.Fatal(e)
 	}
 	w.WriteHeader(http.StatusOK)
@@ -175,6 +183,9 @@ func UpdateFile(w http.ResponseWriter, r *http.Request) {
 	fileToUpdate, err := os.OpenFile(filepath.Join(DirectoryName, file.Name+".txt"), os.O_RDWR, 0644)
 
 	if err != nil {
+		data := []byte("File not found")
+		w.Write(data)
+		w.WriteHeader(http.StatusBadRequest)
 		log.Fatalf("failed opening file: %s", err)
 	}
 	defer fileToUpdate.Close()
@@ -188,6 +199,9 @@ func UpdateFile(w http.ResponseWriter, r *http.Request) {
 
 	_, err = fileToUpdate.WriteString(file.Content) // Write at 0 beginning
 	if err != nil {
+		data := []byte("File cannot be updated")
+		w.Write(data)
+		w.WriteHeader(http.StatusBadRequest)
 		log.Fatalf("failed writing to file: %s", err)
 	}
 
@@ -234,7 +248,12 @@ func GetFiles(w http.ResponseWriter, r *http.Request) {
 
 	files, err := ioutil.ReadDir(filepath.Join(DirectoryName))
 	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
 		log.Fatal(err)
+	}
+
+	if len(files) == 0 {
+		w.WriteHeader(http.StatusBadRequest)
 	}
 
 	for _, file := range files {
@@ -256,6 +275,7 @@ func CountWord(w http.ResponseWriter, r *http.Request) {
 	fh, err := os.OpenFile(filepath.Join(DirectoryName, fileName+".txt"), os.O_RDWR, 0644)
 	if err != nil {
 		fmt.Printf("Could not open file '%v': %v", "File1.txt", err)
+		w.WriteHeader(http.StatusBadRequest)
 		os.Exit(1)
 	}
 	reader := bufio.NewReader(fh)
@@ -288,7 +308,7 @@ func CountWord(w http.ResponseWriter, r *http.Request) {
 
 	b := new(bytes.Buffer)
 	for _, word := range words {
-		fmt.Fprintf(b, "%s=\"%s\"\n", word, counter[word])
+		fmt.Fprintf(b, "word = %s , ocurrences = %d \n", word, counter[word])
 	}
 
 	result := []byte(b.String())
@@ -320,6 +340,7 @@ func FindWordCount(w http.ResponseWriter, r *http.Request) {
 	files, err := ioutil.ReadDir(filepath.Join(DirectoryName))
 
 	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
 		log.Fatal(err)
 	}
 
@@ -348,6 +369,7 @@ func FindWordCount(w http.ResponseWriter, r *http.Request) {
 		file, fileOpenErr := os.Open(filepath.Join(DirectoryName, file.Name()))
 		//fmt.Println("File Name: ", file.Name())
 		if fileOpenErr != nil {
+			w.WriteHeader(http.StatusBadRequest)
 			fmt.Println("Not able to open the file : ", file.Name())
 		}
 
@@ -383,8 +405,8 @@ func FindWordCount(w http.ResponseWriter, r *http.Request) {
 
 	b := new(bytes.Buffer)
 	for i := 0; i <= 9; i++ {
-		fmt.Println("\n Total number of words in file ", keys[i])
-		fmt.Fprintf(b, "%s \"\n", keys[i])
+		fmt.Println("\n Total number of words in file", keys[i])
+		fmt.Fprintf(b, "%v \n", keys[i])
 	}
 
 	result := []byte(b.String())

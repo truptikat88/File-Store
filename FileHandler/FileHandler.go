@@ -1,4 +1,4 @@
-package FileHandler
+package filehandler
 
 import (
 	"bufio"
@@ -14,6 +14,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"time"
 )
 
 const (
@@ -90,9 +91,20 @@ func AddFiles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var strError string
 	for _, file := range items.Elements {
 		//strFileName := file.Name
 		data := []byte(file.Content)
+
+		_, err = ioutil.ReadFile(filepath.Join(DirectoryName, file.Name+".txt"))
+		if err == nil {
+			strError = file.Name + " file already exists in File-Store, please choose different file name. \n"
+			data := []byte(strError)
+			w.Write(data)
+			w.WriteHeader(http.StatusBadRequest)
+			continue
+			//panic(err)
+		}
 
 		//err = os.WriteFile(filepath.Join() DirectoryName+"/"+file.Name+".txt", data, 0644)
 		err = os.WriteFile(filepath.Join(DirectoryName, file.Name+".txt"), data, 0644)
@@ -103,10 +115,10 @@ func AddFiles(w http.ResponseWriter, r *http.Request) {
 
 		strFileName := file.Name + " file got created successfully"
 		fmt.Fprintf(w, strFileName)
+		w.WriteHeader(http.StatusOK)
 	}
 
 	//fmt.Fprintf(w, "File is created successfully...")
-	w.WriteHeader(http.StatusOK)
 
 }
 
@@ -121,22 +133,31 @@ func AddFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//strFileName := file.Name
-	data := []byte(file.Content)
-
-	//err = os.WriteFile(DirectoryName+"/"+file.Name+".txt", data, 0644)
-	err = os.WriteFile(filepath.Join(DirectoryName, file.Name+".txt"), data, 0644)
-
-	if err != nil {
-		log.Fatal(err)
+	_, err = ioutil.ReadFile(filepath.Join(DirectoryName, file.Name+".txt"))
+	if err == nil {
+		data := []byte("File already exists, please choose different file name")
+		w.Write(data)
 		w.WriteHeader(http.StatusBadRequest)
+		return
+		//panic(err)
+	} else {
+		//strFileName := file.Name
+		data := []byte(file.Content)
+
+		//err = os.WriteFile(DirectoryName+"/"+file.Name+".txt", data, 0644)
+		err = os.WriteFile(filepath.Join(DirectoryName, file.Name+".txt"), data, 0644)
+
+		if err != nil {
+			log.Fatal(err)
+			w.WriteHeader(http.StatusBadRequest)
+		}
+
+		strFileName := file.Name + " file got created successfully"
+		fmt.Fprintf(w, strFileName)
+
+		//fmt.Fprintf(w, "File is created successfully...")
+		w.WriteHeader(http.StatusOK)
 	}
-
-	strFileName := file.Name + " file got created successfully"
-	fmt.Fprintf(w, strFileName)
-
-	//fmt.Fprintf(w, "File is created successfully...")
-	w.WriteHeader(http.StatusOK)
 
 }
 
@@ -148,21 +169,23 @@ func RemoveFile(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("filters not present")
 	}
 
-	// _, err := ioutil.ReadFile(filepath.Join(DirectoryName, fileName+".txt"))
-	// if err != nil {
-	// 	data := []byte("File Not Found")
-	// 	w.Write(data)
-	// 	w.WriteHeader(http.StatusBadRequest)
-	// }
-
-	e := os.Remove(filepath.Join(DirectoryName, fileName+".txt"))
-	if e != nil {
-		data := []byte("File can not be removed")
+	_, err := ioutil.ReadFile(filepath.Join(DirectoryName, fileName+".txt"))
+	if err != nil {
+		str := err.Error()
+		data := []byte(str)
 		w.Write(data)
 		w.WriteHeader(http.StatusBadRequest)
-		log.Fatal(e)
+	} else {
+		e := os.Remove(filepath.Join(DirectoryName, fileName+".txt"))
+		if e != nil {
+			data := []byte("File can not be removed")
+			w.Write(data)
+			w.WriteHeader(http.StatusBadRequest)
+			log.Fatal(e)
+		}
+		w.WriteHeader(http.StatusOK)
 	}
-	w.WriteHeader(http.StatusOK)
+
 }
 
 func UpdateFile(w http.ResponseWriter, r *http.Request) {
@@ -179,69 +202,40 @@ func UpdateFile(w http.ResponseWriter, r *http.Request) {
 	//strFileName := file.Name
 	dataToUpdate := []byte(file.Content)
 
-	// Read Write Mode
-	fileToUpdate, err := os.OpenFile(filepath.Join(DirectoryName, file.Name+".txt"), os.O_RDWR, 0644)
-
+	_, err = ioutil.ReadFile(filepath.Join(DirectoryName, file.Name+".txt"))
 	if err != nil {
-		data := []byte("File not found")
+		str := err.Error()
+		data := []byte(str)
 		w.Write(data)
 		w.WriteHeader(http.StatusBadRequest)
-		log.Fatalf("failed opening file: %s", err)
-	}
-	defer fileToUpdate.Close()
+		//log.Fatalf("failed opening file: %s", err)
+	} else {
+		// Read Write Mode
+		fileToUpdate, err := os.OpenFile(filepath.Join(DirectoryName, file.Name+".txt"), os.O_RDWR, 0644)
+		if err != nil {
+			str := err.Error()
+			data := []byte(str)
+			w.Write(data)
+			w.WriteHeader(http.StatusBadRequest)
+			log.Fatalf("failed opening file: %s", err)
+		}
 
-	data := []byte(dataToUpdate)
+		data := []byte(dataToUpdate)
 
-	// _, err = fileToUpdate.WriteAt(data, 0) // Write at 0 beginning
-	// if err != nil {
-	// 	log.Fatalf("failed writing to file: %s", err)
-	// }
+		_, err = fileToUpdate.WriteString(file.Content) // Write at 0 beginning
+		if err != nil {
+			data := []byte("File cannot be updated")
+			w.Write(data)
+			w.WriteHeader(http.StatusBadRequest)
+			log.Fatalf("failed writing to file: %s", err)
+		}
 
-	_, err = fileToUpdate.WriteString(file.Content) // Write at 0 beginning
-	if err != nil {
-		data := []byte("File cannot be updated")
+		w.WriteHeader(http.StatusOK)
 		w.Write(data)
-		w.WriteHeader(http.StatusBadRequest)
-		log.Fatalf("failed writing to file: %s", err)
 	}
+	//defer fileToUpdate.Close()
 
-	w.WriteHeader(http.StatusOK)
-	//w.Header().Set("Content-Type", "application/octet-stream")
-	w.Write(data)
 }
-
-// func getFile(w http.ResponseWriter, r *http.Request) {
-// 	fmt.Println("Inside getFile function...")
-
-// 	// Open the file and print the data to cmd line
-// 	// f, _ := os.Open(DirectoryName + "\\file.txt")
-// 	// // Create a new Scanner for the file.
-// 	// scanner := bufio.NewScanner(f)
-// 	// // Loop over all lines in the file and print them.
-// 	// for scanner.Scan() {
-// 	// 	line := scanner.Text()
-// 	// 	fmt.Println(line)
-// 	// }
-
-// 	// path := r.URL.Path
-// 	// fmt.Println(path)
-
-// 	fileName := r.URL.Query().Get("fileName")
-// 	if len(fileName) == 0 {
-// 		fmt.Println("filters not present")
-// 	}
-// 	//fmt.Println(fileName)
-
-// 	fileBytes, err := ioutil.ReadFile(filepath.Join(DirectoryName, fileName+".txt"))
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	w.WriteHeader(http.StatusOK)
-// 	//w.Header().Set("Content-Type", "application/octet-stream")
-// 	w.Write(fileBytes)
-
-// }
 
 func GetFiles(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Inside getFiles function...")
@@ -257,7 +251,10 @@ func GetFiles(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, file := range files {
-		fmt.Fprintf(w, file.Name(), file.ModTime(), file.Size())
+		dt := time.Now()
+		fmt.Fprintf(w, "File Name: %s", file.Name())
+		fmt.Fprintf(w, " Modified Time: %v", dt.Format(file.ModTime().String()))
+		fmt.Fprintf(w, " Size: %d", file.Size())
 		fmt.Fprintf(w, "\n")
 	}
 

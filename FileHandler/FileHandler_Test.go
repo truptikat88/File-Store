@@ -1,4 +1,4 @@
-package FileHandler
+package filehandler
 
 import (
 	"bytes"

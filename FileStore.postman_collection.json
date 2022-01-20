@@ -6,18 +6,27 @@
 	},
 	"item": [
 		{
-			"name": "Get All Files from File store",
+			"name": "Create multiple files",
 			"request": {
-				"method": "GET",
+				"method": "POST",
 				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"items\" :[\r\n        {\r\n            \"fileName\": \"File5\",\r\n            \"fileContent\": \"This is my new file created from postman\"\r\n        },\r\n        {\r\n            \"fileName\": \"File6\",\r\n            \"fileContent\": \"This is my new file created from postman again\"\r\n        }\r\n    ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
 				"url": {
-					"raw": "localhost:8081\\filesGetAll",
+					"raw": "localhost:8081\\filesAdd",
 					"host": [
 						"localhost"
 					],
 					"port": "8081",
 					"path": [
-						"filesGetAll"
+						"filesAdd"
 					]
 				}
 			},
@@ -30,7 +39,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"fileName\": \"File3\",\r\n    \"fileContent\": \"This is my new file created from postman\"\r\n}",
+					"raw": "{\r\n    \"fileName\": \"File6\",\r\n    \"fileContent\": \"This is my new file created from postman alright\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -69,6 +78,24 @@
 							"key": "fileName",
 							"value": "File2"
 						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get All Files from File store",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8081\\filesGetAll",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"filesGetAll"
 					]
 				}
 			},
@@ -145,33 +172,6 @@
 					"port": "8080",
 					"path": [
 						"countWordFromAllFiles"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "create multiple files",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"items\" :[\r\n        {\r\n            \"fileName\": \"File5\",\r\n            \"fileContent\": \"This is my new file created from postman\"\r\n        },\r\n        {\r\n            \"fileName\": \"File6\",\r\n            \"fileContent\": \"This is my new file created from postman\"\r\n        }\r\n    ]\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "localhost:8081\\filesAdd",
-					"host": [
-						"localhost"
-					],
-					"port": "8081",
-					"path": [
-						"filesAdd"
 					]
 				}
 			},

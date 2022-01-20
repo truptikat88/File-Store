@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	fileHandler "github.com/truptikat88/File-Store/filehandler"
+	fileHandler "github.com/truptikat88/File-Store/FileHandler"
 )
 
 func HandleRequests() {

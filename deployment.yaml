@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
       - name: file-service # the one from which pod get created
-        image: truptikat88/file-service:v1.0.0 #the one which we give in docker build
+        image: truptikat88/file-service:v1.1.0 #the one which we give in docker build
         ports:
         - containerPort: 8081

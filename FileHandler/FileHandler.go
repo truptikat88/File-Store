@@ -1,4 +1,4 @@
-package filehandler
+package FileHandler
 
 import (
 	"bufio"
@@ -60,7 +60,7 @@ func GetFile(w http.ResponseWriter, r *http.Request) {
 	if len(fileName) == 0 {
 		fmt.Println("filters not present")
 	}
-	//fmt.Println(fileName)
+	fmt.Println(filepath.Join(DirectoryName, fileName+".txt"))
 
 	fileBytes, err := ioutil.ReadFile(filepath.Join(DirectoryName, fileName+".txt"))
 	if err != nil {
@@ -68,11 +68,12 @@ func GetFile(w http.ResponseWriter, r *http.Request) {
 		w.Write(data)
 		w.WriteHeader(http.StatusBadRequest)
 		//panic(err)
-	}
+	} else {
+		w.WriteHeader(http.StatusOK)
+		//w.Header().Set("Content-Type", "application/octet-stream")
+		w.Write(fileBytes)
 
-	w.WriteHeader(http.StatusOK)
-	//w.Header().Set("Content-Type", "application/octet-stream")
-	w.Write(fileBytes)
+	}
 
 }
 
